@@ -13,6 +13,7 @@ Repository where I try to learn GANS with tensorflow and pytorch
 * http://guimperarnau.com/blog/2017/03/Fantastic-GANs-and-where-to-find-them
 * https://arxiv.org/pdf/1701.00160.pdf
 * https://www.youtube.com/watch?v=RvgYvHyT15E
-* https://www.youtube.com/watch?v=g5YZjn7O7aQ&t=1584s
-* https://www.youtube.com/watch?v=X1mUN6dD8uE&t=1600s
+* https://www.youtube.com/watch?v=g5YZjn7O7aQ
+* https://www.youtube.com/watch?v=X1mUN6dD8uE
+* https://ishmaelbelghazi.github.io/ALI/ 
 
