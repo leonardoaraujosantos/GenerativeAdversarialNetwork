@@ -19,4 +19,5 @@ Repository where I try to learn GANS with tensorflow and pytorch
 * http://blog.evjang.com/2016/06/generative-adversarial-nets-in.html
 * https://arxiv.org/pdf/1606.03498.pdf
 * https://bamos.github.io/2016/08/09/deep-completion/#ml-heavy-generative-adversarial-net-gan-building-blocks
+* https://github.com/openai/improved-gan
 
