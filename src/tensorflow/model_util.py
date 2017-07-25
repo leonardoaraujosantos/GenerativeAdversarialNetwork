@@ -286,6 +286,20 @@ def fc_layer(x, channels_in, channels_out, name="fc", do_summary=True):
         return activation
 
 
+def linear_std(input, output_dim, name='linear', stddev=1.0):
+    with tf.variable_scope(name):
+        w = tf.get_variable(
+            'w',
+            [input.get_shape()[1], output_dim],
+            initializer=tf.random_normal_initializer(stddev=stddev)
+        )
+        b = tf.get_variable(
+            'b',
+            [output_dim],
+            initializer=tf.constant_initializer(0.0)
+        )
+        return tf.matmul(input, w) + b
+
 def linear_layer(x, channels_in, channels_out, name="linear", do_summary=False):
     with tf.variable_scope(name):
         # Initialize weights with Xavier Initialization
