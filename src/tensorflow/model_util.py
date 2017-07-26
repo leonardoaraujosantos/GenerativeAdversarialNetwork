@@ -182,6 +182,17 @@ def relu(x, name="Relu", do_summary=True):
     return activation
 
 
+# Leaky Relu
+# References:
+# https://datascience.stackexchange.com/questions/5706/what-is-the-dying-relu-problem-in-neural-networks/5734
+# https://github.com/tensorflow/tensorflow/issues/4079
+def lrelu(x, leak=0.2, name="lrelu"):
+    with tf.variable_scope(name):
+        f1 = 0.5 * (1 + leak)
+        f2 = 0.5 * (1 - leak)
+        return f1 * x + f2 * abs(x)
+
+
 # Batchnorm
 # https://www.tensorflow.org/api_docs/python/tf/contrib/layers/batch_norm
 # https://www.tensorflow.org/api_docs/python/tf/nn/fused_batch_norm
