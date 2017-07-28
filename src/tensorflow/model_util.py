@@ -182,6 +182,12 @@ def relu(x, name="Relu", do_summary=True):
     return activation
 
 
+def dropout(x, keep_prob=0.5, name='dropout'):
+    with tf.variable_scope(name):
+        drop = tf.nn.dropout(x, keep_prob)
+    return drop
+
+
 # Leaky Relu
 # References:
 # https://datascience.stackexchange.com/questions/5706/what-is-the-dying-relu-problem-in-neural-networks/5734
@@ -191,6 +197,19 @@ def lrelu(x, leak=0.2, name="lrelu"):
         f1 = 0.5 * (1 + leak)
         f2 = 0.5 * (1 - leak)
         return f1 * x + f2 * abs(x)
+
+
+def selu(x, name="selu"):
+    """ When using SELUs you have to keep the following in mind:
+    # (1) scale inputs to zero mean and unit variance
+    # (2) use SELUs
+    # (3) initialize weights with stddev sqrt(1/n)
+    # (4) use SELU dropout
+    """
+    with tf.variable_scope(name):
+        alpha = 1.6732632423543772848170429916717
+        scale = 1.0507009873554804934193349852946
+        return scale * tf.where(x >= 0.0, x, alpha * tf.nn.elu(x))
 
 
 # Batchnorm
