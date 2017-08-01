@@ -10,6 +10,9 @@ import model_util as util
 # https://www.youtube.com/watch?v=0VPQHbMvGzg
 # https://github.com/llSourcell/Generative_Adversarial_networks_LIVE/blob/master/EZGAN.ipynb
 # https://www.youtube.com/watch?v=AJVyzd0rqdc
+# https://www.oreilly.com/learning/generative-adversarial-networks-for-beginners
+# https://github.com/osh/KerasGAN
+# https://github.com/rajathkumarmp/DCGAN
 class DCGAN(object):
     def __init__(self, img_size=28, latent_size=100, hidden_size=1000, training_mode=True):
         self.__x = tf.placeholder(tf.float32, shape=[None, img_size * img_size], name='IMAGE_IN')
@@ -31,7 +34,10 @@ class DCGAN(object):
 
     # Create generator model
     def generator(self, z, hidden_size, training_mode):
-        h0 = tf.nn.relu(util.linear_std(input, hidden_size, 'g0'))
+        # Takes a d-dimensional vector of noise and upsamples it to become a 28 x 28 image
+        # Convert hidden vector (ex 1x100) to a matrix that could be reshaped and match the input of a strided
+        # deconvolution
+        h0 = tf.nn.relu(util.linear_std(input, 3136, 'g0'))
 
         # Crete discriminator model
     def discriminator(self, image, training_mode):
