@@ -241,6 +241,11 @@ def max_pool(x, k_h, k_w, S, name="maxpool"):
         return tf.nn.max_pool(x, ksize=[1, k_h, k_w, 1], strides=[1, S, S, 1], padding='SAME')
 
 
+def avg_pool(x, k_h, k_w, S, name="avgpool"):
+    with tf.variable_scope(name):
+        return tf.nn.avg_pool(x, ksize=[1, k_h, k_w, 1], strides=[1, S, S, 1], padding='SAME')
+
+
 # Max pooling with indexes, those indexes will be needed for the unpooling operation (Could be substituted by deconv)
 # References
 # https://www.tensorflow.org/api_docs/python/tf/nn/max_pool_with_argmax
