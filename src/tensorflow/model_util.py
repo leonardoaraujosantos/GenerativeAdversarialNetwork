@@ -192,11 +192,15 @@ def dropout(x, keep_prob=0.5, name='dropout'):
 # References:
 # https://datascience.stackexchange.com/questions/5706/what-is-the-dying-relu-problem-in-neural-networks/5734
 # https://github.com/tensorflow/tensorflow/issues/4079
-def lrelu(x, leak=0.2, name="lrelu"):
+def lrelu(x, leak=0.2, name="lrelu", do_summary=True):
     with tf.variable_scope(name):
         f1 = 0.5 * (1 + leak)
         f2 = 0.5 * (1 - leak)
-        return f1 * x + f2 * abs(x)
+        activation = f1 * x + f2 * abs(x)
+        if do_summary:
+            # Add summaries for helping debug
+            tf.summary.histogram("activation", activation)
+        return activation
 
 
 def selu(x, name="selu"):
@@ -340,6 +344,23 @@ def linear_layer(x, channels_in, channels_out, name="linear", do_summary=False):
         # Initialize weights with Xavier Initialization
         shape = [channels_in, channels_out]
         initializer = tf.contrib.layers.xavier_initializer()
+        w = tf.Variable(initializer(shape=shape), name="weights")
+        b = tf.Variable(tf.constant(0.1, shape=[channels_out]), name="bias")
+        activation = tf.matmul(x, w) + b
+
+        if do_summary:
+            # Add summaries for helping debug
+            tf.summary.histogram("weights", w)
+            tf.summary.histogram("bias", b)
+            tf.summary.histogram("activation", activation)
+        return activation
+
+
+def linear_layer_std(x, channels_in, channels_out, name="linear", do_summary=False, stddev=1.0):
+    with tf.variable_scope(name):
+        # Initialize weights with Xavier Initialization
+        shape = [channels_in, channels_out]
+        initializer = tf.random_normal_initializer(stddev=stddev)
         w = tf.Variable(initializer(shape=shape), name="weights")
         b = tf.Variable(tf.constant(0.1, shape=[channels_out]), name="bias")
         activation = tf.matmul(x, w) + b
