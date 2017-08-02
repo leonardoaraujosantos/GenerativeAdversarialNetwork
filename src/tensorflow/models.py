@@ -15,8 +15,7 @@ import model_util as util
 # https://github.com/rajathkumarmp/DCGAN
 class DCGAN(object):
     def __init__(self, img_size=28, latent_size=100, training_mode=True):
-        self.__x = tf.placeholder(tf.float32, shape=[None, img_size * img_size], name='IMAGE_IN')
-        self.__x_image = tf.reshape(self.__x, [-1, img_size, img_size, 1])
+        self.__x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 1], name='IMAGE_IN')
         self.__z = tf.placeholder(tf.float32, shape=(None, latent_size), name='Z')
 
         with tf.variable_scope('GAN'):
@@ -27,7 +26,7 @@ class DCGAN(object):
 
             # Discriminator
             with tf.variable_scope("D") as scope:
-                self.__D_real = self.discriminator(self.__x_image, training_mode)
+                self.__D_real = self.discriminator(self.__x, training_mode)
 
                 scope.reuse_variables()
                 self.__D_fake = self.discriminator(self.__G, training_mode)
@@ -79,7 +78,7 @@ class DCGAN(object):
 
         # Reshape 1x1x1024 to [-1,1024]
         conv3_act_reshape = tf.reshape(conv3_act, [-1, 1024])
-        linear_1 = util.linear_layer(conv3_act_reshape, 1024, 1)
+        linear_1 = util.linear_layer_std(conv3_act_reshape, 1024, 1)
 
         # Return values between 0..1 (Probabilities)
         return util.sigmoid(linear_1, do_summary=False)
@@ -102,7 +101,7 @@ class DCGAN(object):
 
     @property
     def discriminator_input_real(self):
-        return self.__x_image
+        return self.__x
 
     @property
     def trainable_variables(self):

@@ -325,7 +325,7 @@ def fc_layer(x, channels_in, channels_out, name="fc", do_summary=True):
         return activation
 
 
-def linear_std(input, output_dim, name='linear', stddev=1.0):
+def linear_std(input, output_dim, name='linear', stddev=0.02):
     with tf.variable_scope(name):
         w = tf.get_variable(
             'w',
@@ -356,7 +356,7 @@ def linear_layer(x, channels_in, channels_out, name="linear", do_summary=False):
         return activation
 
 
-def linear_layer_std(x, channels_in, channels_out, name="linear", do_summary=False, stddev=1.0):
+def linear_layer_std(x, channels_in, channels_out, name="linear", do_summary=False, stddev=0.02):
     with tf.variable_scope(name):
         # Initialize weights with Xavier Initialization
         shape = [channels_in, channels_out]
