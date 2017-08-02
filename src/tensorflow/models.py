@@ -13,6 +13,7 @@ import model_util as util
 # https://www.oreilly.com/learning/generative-adversarial-networks-for-beginners
 # https://github.com/osh/KerasGAN
 # https://github.com/rajathkumarmp/DCGAN
+# https://github.com/jonbruner/generative-adversarial-networks.git
 class DCGAN(object):
     def __init__(self, img_size=28, latent_size=100, training_mode=True):
         self.__x = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 1], name='IMAGE_IN')
