@@ -82,7 +82,10 @@ class DCGAN(object):
         linear_1 = util.linear_layer_std(conv3_act_reshape, 1024, 1)
 
         # Return values between 0..1 (Probabilities)
-        return util.sigmoid(linear_1, do_summary=False)
+        #return util.sigmoid(linear_1, do_summary=False)
+
+        # Return unbounded to give enough gradient to the generator
+        return linear_1
 
     @property
     def output_generator(self):
