@@ -34,58 +34,83 @@ class DCGAN(object):
 
     # Create generator model
     def generator(self, z, training_mode, latent_size):
-        # Takes a d-dimensional vector of noise and upsamples it to become a 28 x 28 image
-        # Convert hidden vector (ex 1x100) to a matrix that could be reshaped and match the input of a strided
-        # deconvolution
-        #h0 = tf.nn.relu(util.linear_layer_std(z, latent_size, 6272, 'g0'))
-        h0 = tf.nn.relu(util.linear_std(z, 6272, 'g0', stddev=0.02))
-        # 7x7x200
-        h0_reshape = tf.reshape(h0, [-1, 7, 7, 128])
+        g_w1 = tf.get_variable('g_w1', [latent_size, 3136], dtype=tf.float32,
+                               initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g_b1 = tf.get_variable('g_b1', [3136], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g1 = tf.matmul(z, g_w1) + g_b1
+        g1 = tf.reshape(g1, [-1, 56, 56, 1])
+        g1 = tf.contrib.layers.batch_norm(g1, epsilon=1e-5, scope='bn1')
+        g1 = tf.nn.relu(g1)
 
-        conv_t1_out = util.conv2d_transpose(h0_reshape, (3, 3), (14, 14), 128, 256, 2,
-                                                  name="dconv1", do_summary=False, pad='SAME')
-        conv1_bn = util.batch_norm(conv_t1_out, training_mode, name='bn_c1')
-        conv_t1_out_act = util.relu(conv1_bn, do_summary=False)
+        # Generate 50 features
+        g_w2 = tf.get_variable('g_w2', [3, 3, 1, latent_size / 2], dtype=tf.float32,
+                               initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g_b2 = tf.get_variable('g_b2', [latent_size / 2], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g2 = tf.nn.conv2d(g1, g_w2, strides=[1, 2, 2, 1], padding='SAME')
+        g2 = g2 + g_b2
+        g2 = tf.contrib.layers.batch_norm(g2, epsilon=1e-5, scope='bn2')
+        g2 = tf.nn.relu(g2)
+        g2 = tf.image.resize_images(g2, [56, 56])
 
-        conv_t2_out = util.conv2d_transpose(conv_t1_out_act, (3, 3), (28, 28), 256, 1, 2,
-                                            name="dconv2", do_summary=False, pad='SAME')
-        #conv2_bn = util.batch_norm(conv_t2_out, training_mode, name='bn_c2')
-        conv_t2_out_act = util.relu(conv_t2_out, do_summary=False)
+        # Generate 25 features
+        g_w3 = tf.get_variable('g_w3', [3, 3, latent_size / 2, latent_size / 4], dtype=tf.float32,
+                               initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g_b3 = tf.get_variable('g_b3', [latent_size / 4], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g3 = tf.nn.conv2d(g2, g_w3, strides=[1, 2, 2, 1], padding='SAME')
+        g3 = g3 + g_b3
+        g3 = tf.contrib.layers.batch_norm(g3, epsilon=1e-5, scope='bn3')
+        g3 = tf.nn.relu(g3)
+        g3 = tf.image.resize_images(g3, [56, 56])
 
-        # Return values between -1..1
-        return tf.nn.tanh(conv_t2_out_act)
+        # Final convolution with one output channel
+        g_w4 = tf.get_variable('g_w4', [1, 1, latent_size / 4, 1], dtype=tf.float32,
+                               initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g_b4 = tf.get_variable('g_b4', [1], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        g4 = tf.nn.conv2d(g3, g_w4, strides=[1, 2, 2, 1], padding='SAME')
+        g4 = g4 + g_b4
+        g4 = tf.sigmoid(g4)
+
+        # Dimensions of g4: batch_size x 28 x 28 x 1
+        return g4
 
 
         # Crete discriminator model
     def discriminator(self, image, training_mode):
-        # Example: input 28x28x1
-        conv1 = util.conv2d(image, 5, 5, 1, 32, 1, "conv1", pad='SAME',viewWeights=False, do_summary=False)
-        conv1_bn = util.batch_norm(conv1, training_mode, name='bn_c1')
-        conv1_act = util.lrelu(conv1_bn, do_summary=False)
+        # First convolutional and pool layers
+        # This finds 32 different 5 x 5 pixel features
+        d_w1 = tf.get_variable('d_w1', [5, 5, 1, 32], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        d_b1 = tf.get_variable('d_b1', [32], initializer=tf.constant_initializer(0))
+        d1 = tf.nn.conv2d(input=image, filter=d_w1, strides=[1, 1, 1, 1], padding='SAME')
+        d1 = d1 + d_b1
+        d1 = tf.nn.relu(d1)
+        d1 = tf.nn.avg_pool(d1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-        avg_pool_1 = util.avg_pool(conv1_act, 2, 2, 2)
+        # Second convolutional and pool layers
+        # This finds 64 different 5 x 5 pixel features
+        d_w2 = tf.get_variable('d_w2', [5, 5, 32, 64], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        d_b2 = tf.get_variable('d_b2', [64], initializer=tf.constant_initializer(0))
+        d2 = tf.nn.conv2d(input=d1, filter=d_w2, strides=[1, 1, 1, 1], padding='SAME')
+        d2 = d2 + d_b2
+        d2 = tf.nn.relu(d2)
+        d2 = tf.nn.avg_pool(d2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-        # input: 14x14x32
-        conv2 = util.conv2d(avg_pool_1, 5, 5, 32, 64, 1, "conv2", pad='SAME', viewWeights=False, do_summary=False)
-        conv2_bn = util.batch_norm(conv2, training_mode, name='bn_c2')
-        conv2_act = util.lrelu(conv2_bn, do_summary=False)
+        # First fully connected layer
+        d_w3 = tf.get_variable('d_w3', [7 * 7 * 64, 1024], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        d_b3 = tf.get_variable('d_b3', [1024], initializer=tf.constant_initializer(0))
+        d3 = tf.reshape(d2, [-1, 7 * 7 * 64])
+        d3 = tf.matmul(d3, d_w3)
+        d3 = d3 + d_b3
+        d3 = tf.nn.relu(d3)
 
-        avg_pool_2 = util.avg_pool(conv2_act, 2, 2, 2)
+        # Second fully connected layer
+        d_w4 = tf.get_variable('d_w4', [1024, 1], initializer=tf.truncated_normal_initializer(stddev=0.02))
+        d_b4 = tf.get_variable('d_b4', [1], initializer=tf.constant_initializer(0))
+        d4 = tf.matmul(d3, d_w4) + d_b4
 
-        # input: 7x7x64, output:1x1x1024
-        conv3 = util.conv2d(avg_pool_2, 7, 7, 64, 1024, 1, "conv3", pad='VALID', viewWeights=False, do_summary=False)
-        conv3_bn = util.batch_norm(conv3, training_mode, name='bn_c3')
-        conv3_act = util.lrelu(conv3_bn, do_summary=False)
+        # d4 contains unscaled values
+        return d4
 
-        # Reshape 1x1x1024 to [-1,1024]
-        conv3_act_reshape = tf.reshape(conv3_act, [-1, 1024])
-        linear_1 = util.linear_layer_std(conv3_act_reshape, 1024, 1)
 
-        # Return values between 0..1 (Probabilities)
-        #return util.sigmoid(linear_1, do_summary=False)
-
-        # Return unbounded to give enough gradient to the generator
-        return linear_1
 
     @property
     def output_generator(self):
